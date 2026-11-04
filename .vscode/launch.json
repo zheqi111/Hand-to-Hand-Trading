@@ -1,0 +1,1 @@
+{"version":"0.2.0","configurations":[{"type":"node","request":"launch","name":"Run trading app","program":"${workspaceFolder}/server.mjs","console":"integratedTerminal","serverReadyAction":{"pattern":"Hand to Hand Trading: (http://[^\\s]+)","uriFormat":"%s","action":"openExternally"}}]}
