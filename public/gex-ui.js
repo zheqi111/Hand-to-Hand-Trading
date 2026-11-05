@@ -36,7 +36,7 @@ form.addEventListener('submit',async event=>{
   const values=Object.fromEntries(new FormData(form));values.asOf=new Date(values.asOf).toISOString();values.rows=parseRows(values.rows);
   const result=await api('/api/gex',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});saved=true;
   await load(result.snapshot.symbol);
-  message.textContent='Snapshot saved on this computer. Analysis updated.';form.elements.asOf.value=currentTime();
+  message.textContent='Snapshot saved on this computer. Analysis updated.';form.elements.asOf.value=currentTime();document.dispatchEvent(new Event('gex-saved'));
  }catch(error){message.textContent=(saved?'Saved, but refresh failed. Do not resubmit; use Refresh. ':'')+error.message;}
  finally{button.disabled=false;}
 });

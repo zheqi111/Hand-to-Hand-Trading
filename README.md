@@ -65,3 +65,17 @@ Photos are stored in `data/gex/photos/`; generated reports with source annotatio
 Validation: automated tests use simulated model responses for extraction and research. A real API integration test requires your configured key; automated tests do not validate actual OCR accuracy, financial forecasting quality or live search coverage.
 
 API implementation references: https://developers.openai.com/api/docs/guides/images-vision and https://developers.openai.com/api/docs/guides/tools-web-search.
+
+## Outcome memory and learning journal
+
+The analyst now receives historical context on every new report: up to 12 recent comparable GEX snapshots and 12 resolved examples matching symbol, source, expiration scope, units and net-GEX sign. Each report saves the exact memory context and cutoff it used. This is retrieval-based adaptation, not model fine-tuning or autonomous code rewriting. Earlier report files are not edited.
+
+The analyst is instructed to append a testable up/down/range/wait outlook with a 30/60/120-minute horizon. The server validates it before recording it. Missing or invalid forecasts remain unscored; older reports are not retroactively labeled. Reports still include separate conditional scenarios, but those triggers/targets are not automatically scored by this version.
+
+The fixed scoring band is ±0.2% from the submitted underlying spot, not a trade entry. The deadline starts at report creation. A same-symbol, same-source future snapshot observed at the deadline or within five minutes afterward supplies the endpoint price. It must have been uploaded by the evaluation cutoff. The earliest uploaded qualifying observation wins; later corrections do not replace it in this version. Outcomes may be uploaded later with their true observation time, but are not available to earlier reports. No intraperiod target touches, stop ordering, option returns or fills can be inferred from these endpoint observations.
+
+Learning journal displays resolved, matched, missed, pending, missing, abstained and unscored results. It refreshes on saved GEX updates, completed reports, manual refresh, and once per minute while the page is open. New reports automatically use the updated evidence. No AI calls or background model retraining happen just because time passes. Continue uploading observed spot data, including after losing forecasts, to avoid selection bias.
+
+Per-horizon counts include an always-up baseline; fewer than 20 comparable outcomes is labeled insufficient. Twenty is only a display threshold, not statistical proof. Overlapping forecasts are correlated and larger counts alone do not establish an edge. The model is instructed to explain historical relevance without changing risk limits, promising improved accuracy or inventing calibrated probabilities. A separate forward-testing and versioned strategy-change process would be needed before automatic strategy tuning; this release does not implement that process.
+
+The journal endpoint is GET /api/analyst/learning (optional symbol query for comparable grouping). All learning records remain under the Git-ignored data directory. User-entered prices and timestamps remain unverified. AI research still requires a configured OpenAI API key; the journal and arithmetic outcome scoring do not.

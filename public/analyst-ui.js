@@ -62,6 +62,7 @@ document.querySelector('#photo-use').addEventListener('click',()=>{
  }catch(e){message.textContent=e.message;}
 });
 function renderPart(part){
+ part={...part,text:part.text.replace(/<forecast>[\s\S]*?<\/forecast>/g,'')};
  const p=document.createElement('p');p.className='report-text';
  let cursor=0;
  const citations=(part.annotations||[]).filter(a=>a.type==='url_citation'&&/^https?:\/\//.test(a.url||'')&&Number.isInteger(a.start_index)&&Number.isInteger(a.end_index)).sort((a,b)=>a.start_index-b.start_index);
@@ -74,7 +75,7 @@ document.querySelector('#photo-run').addEventListener('click',async()=>{
   const {report}=await api('/api/analyst/run',{uploadId:batch.value});
   document.querySelector('#analyst-report').hidden=false;
   document.querySelector('#report-time').textContent='Generated '+new Date(report.createdAt).toLocaleString()+' · snapshot '+report.snapshotId;
-  document.querySelector('#report-body').replaceChildren(...report.parts.map(renderPart));message.textContent='Report saved locally. Check its evidence and missing inputs.';
+  document.querySelector('#report-body').replaceChildren(...report.parts.map(renderPart));message.textContent=report.forecast?'Report saved. Locked outlook: '+report.forecast.direction+' over '+report.forecast.horizonMinutes+' minutes. Follow it in Learning journal.':'Report saved without a valid scoreable forecast. It will remain unscored in Learning journal.';document.dispatchEvent(new Event('analyst-saved'));
  }catch(e){message.textContent=e.message;}finally{buttons();}
 });
 (async()=>{try{const status=await api('/api/analyst/status');configured=status.configured;document.querySelector('#analyst-status').textContent=configured?'AI CONFIGURED':'AI KEY REQUIRED';await refresh();if(!configured)message.textContent='Photo storage is ready. To enable reading and analysis, configure OPENAI_API_KEY in the local .env file and restart the app. Do not paste your key into chat.';}catch(e){message.textContent=e.message;}})();

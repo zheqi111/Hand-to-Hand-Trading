@@ -8,6 +8,7 @@ try { process.loadEnvFile(fileURLToPath(new URL('./.env',import.meta.url))); } c
 const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/model.js':'model.js','/gex-ui.js':'gex-ui.js','/gex-input.js':'gex-input.js'};
 const types={html:'text/html',js:'text/javascript',css:'text/css'};
 files['/analyst-ui.js']='analyst-ui.js';
+files['/learning-ui.js']='learning-ui.js';
 export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
  async function history(){
   await mkdir(dataDir,{recursive:true});

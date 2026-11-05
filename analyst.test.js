@@ -34,7 +34,12 @@ test('photo workflow persists uploads, uses confirmed snapshot, requires news an
   assert.equal((await call('/api/analyst/extract',{uploadId})).data.draft.rows[0].net,10);
   const run=await call('/api/analyst/run',{uploadId});assert.equal(run.status,200);assert.equal(calls.at(-1).tool_choice,'required');
   assert.match(calls.at(-1).input[0].content[0].text,/snapshot-test/);
+  const sent=JSON.parse(calls.at(-1).input[0].content[0].text);
+  assert.equal(sent.learningMemory.version,'outcome-memory-v1');
+  assert.equal(sent.learningMemory.counts.reports,0);
   assert.equal(JSON.parse(await readFile(join(root,'reports',run.data.report.id+'.json'),'utf8')).snapshotId,'snapshot-test');
+  const memoryView=await call('/api/analyst/learning',null,'GET');
+  assert.equal(memoryView.data.memory.counts.unscored,1);
   searched=false;assert.equal((await call('/api/analyst/run',{uploadId})).status,400);
   const count=calls.length;snapshot.asOf=new Date(Date.now()-31*60000).toISOString();
   assert.equal((await call('/api/analyst/run',{uploadId})).status,400);assert.equal(calls.length,count);
