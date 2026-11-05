@@ -3,8 +3,11 @@ import {readFile,mkdir,writeFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {validateSnapshot,analyzeSnapshot} from './gex.mjs';
+import {photoRoutes} from './analyst.mjs';
+try { process.loadEnvFile(fileURLToPath(new URL('./.env',import.meta.url))); } catch(error) { if(error.code!=='ENOENT')throw error; }
 const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/model.js':'model.js','/gex-ui.js':'gex-ui.js','/gex-input.js':'gex-input.js'};
 const types={html:'text/html',js:'text/javascript',css:'text/css'};
+files['/analyst-ui.js']='analyst-ui.js';
 export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
  async function history(){
   await mkdir(dataDir,{recursive:true});
@@ -12,12 +15,14 @@ export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
   const records=await Promise.all(names.map(n=>readFile(resolve(fileURLToPath(dataDir),n),'utf8').then(JSON.parse)));
   return records.sort((a,b)=>Date.parse(b.asOf)-Date.parse(a.asOf)||Date.parse(b.savedAt)-Date.parse(a.savedAt));
  }
+ const analyst=photoRoutes(fileURLToPath(dataDir),history);
  return http.createServer(async(req,res)=>{
   const json=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
   if(!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.host||''))return json(403,{error:'Local access only.'});
   if(req.headers.origin&&req.headers.origin!=='http://'+req.headers.host)return json(403,{error:'Cross-origin requests are not allowed.'});
   const url=new URL(req.url,'http://localhost');
   try{
+   if(await analyst(req,url,json))return;
    if(url.pathname==='/api/status')return json(200,{mode:'manual',gex:'user_snapshots',news:'not_connected',execution:'disabled'});
    if(url.pathname==='/api/gex'&&req.method==='POST'){
     if(!req.headers['content-type']?.startsWith('application/json'))return json(415,{error:'JSON required.'});
