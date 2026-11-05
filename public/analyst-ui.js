@@ -58,7 +58,7 @@ document.querySelector('#photo-use').addEventListener('click',()=>{
   target.elements.rows.value=document.querySelector('#photo-rows').value;
   target.elements.notes.value=('Reviewed photo batch '+upload.id+'\n'+upload.notes).slice(0,4000);
   target.elements.source.value='';target.elements.scope.value='';target.elements.spot.value='';
-  target.scrollIntoView({behavior:'smooth'});message.textContent='Rows copied. Enter source, spot, scope and units in the GEX form, then save.';
+  location.hash='gex-upload';message.textContent='Rows copied. Enter source, spot, scope and units in the GEX form, then save.';
  }catch(e){message.textContent=e.message;}
 });
 function renderPart(part){
@@ -82,3 +82,4 @@ document.querySelector('#photo-run').addEventListener('click',async()=>{
  }catch(e){message.textContent=e.message;}finally{buttons();}
 });
 (async()=>{try{const status=await api('/api/analyst/status');configured=status.configured;document.querySelector('#analyst-status').textContent=configured?'AI CONFIGURED':'AI KEY REQUIRED';await refresh();if(!configured)message.textContent='Photo storage is ready. To enable reading and analysis, configure OPENAI_API_KEY in the local .env file and restart the app. Do not paste your key into chat.';}catch(e){message.textContent=e.message;}})();
+

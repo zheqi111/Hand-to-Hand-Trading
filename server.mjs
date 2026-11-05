@@ -11,6 +11,7 @@ const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/mode
 const types={html:'text/html',js:'text/javascript',css:'text/css'};
 files['/analyst-ui.js']='analyst-ui.js';
 files['/learning-ui.js']='learning-ui.js';
+files['/demo-ui.js']='demo-ui.js';
 export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
  async function history(){
   await mkdir(dataDir,{recursive:true});
@@ -54,3 +55,4 @@ export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
  });
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))createServer().listen(5173,'127.0.0.1',()=>console.log('Hand to Hand Trading: http://127.0.0.1:5173'));
+
