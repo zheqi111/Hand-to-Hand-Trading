@@ -20,14 +20,14 @@
  <small>Blank cells require correction. Do not substitute zero for missing values. Verify every row, signs, and column meaning against the photo.</small>
  <label class="block"><input type="checkbox" id="photo-confirm"> I checked the column mapping, signs, and all values against the original photo.</label>
  <button id="photo-use" type="button">Use reviewed rows in GEX form</button></div>
- <article id="analyst-report" hidden><h3>Agent report</h3><small id="report-time"></small><p>One-time research output, not continuous monitoring or a guaranteed prediction.</p><div id="report-body"></div></article>
+ <article id="analyst-report" hidden><h3>Agent report</h3><small id="report-time"></small><p>One-time research output, not continuous monitoring or a guaranteed prediction.</p><div id="report-policy" class="freshness"></div><div id="report-body"></div></article>
 </section><section class="panel journal" id="learning-center">
  <div class="section-head"><div><p class="eyebrow">RECORD → OBSERVE → REVIEW</p><h2>Learning journal</h2></div><button id="learning-refresh" type="button">Refresh outcomes</button></div>
- <p>Future analyses use past snapshots and resolved forecasts as evidence. Learning updates when you add data or request a report; it does not retrain the model or change risk limits.</p>
+ <p>Future analyses use past snapshots and resolved forecasts as evidence. Learning updates when you add data or request a report. Resolved misses revise confirmation policies; model weights and risk limits remain fixed.</p>
  <div id="learning-summary" aria-live="polite"></div>
  <p>Outlooks are locked when generated. A later spot-price update from the same source, within 5 minutes after the forecast deadline, supplies the outcome. Keep uploading even when the outlook was wrong.</p>
  <div class="table-scroll"><table><thead><tr><th>Created</th><th>Symbol</th><th>Outlook</th><th>Due</th><th>Outcome</th><th>Move</th></tr></thead><tbody id="learning-rows"></tbody></table></div>
- <div id="learning-groups"></div><p id="learning-message" role="status"></p>
+ <div id="learning-groups"></div><h3>Strategy revisions</h3><p>Resolved misses automatically tighten confirmation requirements for the same symbol, source, expiration scope, units, GEX sign and forecast horizon. Changes are provisional and tracked separately.</p><div id="strategy-revisions"></div><p id="learning-message" role="status"></p>
  <small>Results measure endpoint movement from your submitted spot—not trade profits or target touches. Overlapping forecasts are correlated. No accuracy or profit improvement has been demonstrated.</small>
 </section><section class="panel journal" id="gex-upload">
  <div class="section-head"><div><p class="eyebrow">YOUR DATA · YOUR RESEARCH</p><h2>GEX update desk</h2></div><span class="badge">MANUAL · EVERY 30 MINUTES</span></div>

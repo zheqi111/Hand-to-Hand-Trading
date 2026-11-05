@@ -37,6 +37,9 @@ test('photo workflow persists uploads, uses confirmed snapshot, requires news an
   const sent=JSON.parse(calls.at(-1).input[0].content[0].text);
   assert.equal(sent.learningMemory.version,'outcome-memory-v1');
   assert.equal(sent.learningMemory.counts.reports,0);
+  assert.equal(sent.strategies['30'].revision,0);
+  assert.equal(run.data.report.policyDecision.accepted,false);
+  assert.equal(run.data.report.strategy.revision,0);
   assert.equal(JSON.parse(await readFile(join(root,'reports',run.data.report.id+'.json'),'utf8')).snapshotId,'snapshot-test');
   const memoryView=await call('/api/analyst/learning',null,'GET');
   assert.equal(memoryView.data.memory.counts.unscored,1);

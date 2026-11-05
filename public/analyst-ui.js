@@ -74,6 +74,9 @@ document.querySelector('#photo-run').addEventListener('click',async()=>{
  try{
   const {report}=await api('/api/analyst/run',{uploadId:batch.value});
   document.querySelector('#analyst-report').hidden=false;
+  const policy=document.querySelector('#report-policy');
+  policy.textContent=report.policyDecision?.accepted?'Policy-approved outlook: '+(report.forecast?.direction||'unscored')+' · '+report.strategy.name+' revision '+report.strategy.revision+'. Evidence checks use model-declared observations.':'Outlook withheld / unscored. '+(report.policyDecision?.reasons||[]).join(' ')+'. The text below remains research scenarios, not an approved directional call.';
+  policy.classList.toggle('overdue',!report.policyDecision?.accepted);
   document.querySelector('#report-time').textContent='Generated '+new Date(report.createdAt).toLocaleString()+' · snapshot '+report.snapshotId;
   document.querySelector('#report-body').replaceChildren(...report.parts.map(renderPart));message.textContent=report.forecast?'Report saved. Locked outlook: '+report.forecast.direction+' over '+report.forecast.horizonMinutes+' minutes. Follow it in Learning journal.':'Report saved without a valid scoreable forecast. It will remain unscored in Learning journal.';document.dispatchEvent(new Event('analyst-saved'));
  }catch(e){message.textContent=e.message;}finally{buttons();}

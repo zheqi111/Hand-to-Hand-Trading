@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {validateSnapshot,analyzeSnapshot} from './gex.mjs';
 import {photoRoutes} from './analyst.mjs';
+import {readReports} from './learning.mjs';
+import {reviseStrategies} from './strategy.mjs';
 try { process.loadEnvFile(fileURLToPath(new URL('./.env',import.meta.url))); } catch(error) { if(error.code!=='ENOENT')throw error; }
 const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/model.js':'model.js','/gex-ui.js':'gex-ui.js','/gex-input.js':'gex-input.js'};
 const types={html:'text/html',js:'text/javascript',css:'text/css'};
@@ -31,7 +33,9 @@ export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
     let snapshot;try{snapshot=validateSnapshot(JSON.parse(body));}catch(error){return json(400,{error:error.message});}
     await mkdir(dataDir,{recursive:true});
     await writeFile(resolve(fileURLToPath(dataDir),snapshot.id+'.json'),JSON.stringify(snapshot,null,2),{flag:'wx'});
-    return json(201,{snapshot});
+    let learningWarning=null;
+    try{await reviseStrategies(fileURLToPath(dataDir),await readReports(fileURLToPath(dataDir)),await history());}catch{learningWarning='Snapshot saved, but strategy review could not finish. It will retry before the next analysis.';}
+    return json(201,{snapshot,learningWarning});
    }
    if(url.pathname==='/api/gex'&&req.method==='GET')return json(200,{snapshots:await history()});
    if(url.pathname==='/api/gex/context'&&req.method==='GET'){
