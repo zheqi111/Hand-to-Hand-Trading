@@ -9,7 +9,7 @@ test('trade plans require correctly ordered levels for call and put directions',
  assert.throws(()=>validateTradePlan('Put scenario',plan));assert.equal(validateTradePlan('Wait / no trade',null),null);
 });
 test('expired and incomplete reports never show actionable levels; demo is explicitly distinguished',()=>{
- const report={position:'Call scenario',expiresAt:'2026-11-05T16:00:00Z',tradePlan:plan};
+ const report={asOf:'2026-11-05T15:50:00Z',position:'Call scenario',expiresAt:'2026-11-05T16:00:00Z',tradePlan:plan};
  assert.equal(planState(report,Date.parse(report.expiresAt)-1).status,'conditional');
  assert.equal(planState(report,Date.parse(report.expiresAt)).status,'expired');
  assert.equal(planState(report,Date.parse(report.expiresAt)).plan,undefined);

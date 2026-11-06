@@ -24,6 +24,14 @@ test('roles protect raw data, publication and subscriber feed; sessions revoke o
  assert.equal((await call('/api/admin/publications',{...publication,position:'Call scenario',tradePlan:{contract:'SPY 600 call 2026-11-12',entryPrice:600,targetPrice:590,stopPrice:598,holdMinutes:60}},admin)).status,400);
  const saved=await call('/api/admin/publications',publication,admin);assert.equal(saved.status,201);const {report}=await saved.json();const feed=await call('/api/customer/reports',null,admin).then(r=>r.json());assert.equal(feed.reports[0].reason,publication.reason);
  assert.equal((await call('/api/admin/publications',{id:report.id},admin,'DELETE')).status,200);assert.equal((await call('/api/customer/reports',null,admin).then(r=>r.json())).reports.length,0);
+ const directional={...publication,position:'Call scenario',tradePlan:{contract:'SPY 600 call 2026-11-12',entryPrice:600,targetPrice:605,stopPrice:598,holdMinutes:60}};
+ assert.equal((await call('/api/admin/publications',{...directional,asOf:new Date(Date.now()-1800001).toISOString()},admin)).status,400);
+ const active=await call('/api/admin/publications',directional,admin).then(r=>r.json());
+ const change={id:active.report.id,status:'entered',observedAt:new Date().toISOString(),note:'Manual price and volume confirmation.',expectedVersion:0};
+ assert.equal((await call('/api/admin/trade-status',change,customer)).status,403);
+ assert.equal((await call('/api/admin/trade-status',change,admin)).status,200);
+ assert.equal((await call('/api/admin/trade-status',change,admin)).status,400);
+ assert.equal((await call('/api/customer/reports',null,admin).then(r=>r.json())).reports[0].statusHistory[0].source,'administrator');
  await call('/api/account/logout',{},admin);assert.equal((await call('/api/gex',null,admin)).status,401);
  }finally{await new Promise(r=>server.close(r));await rm(dir,{recursive:true,force:true});}
 });

@@ -111,3 +111,11 @@ Run `npm test` for access-control, publication, session revocation and existing 
 Customer research now leads with action, underlying entry price, take-profit and stop-loss levels, and estimated holding time. Clickable level diagrams explain each threshold; the reasoning stays collapsed until requested. These diagrams are not live price charts or predicted paths, and they do not place orders.
 
 Call/put publications require `tradePlan` with `contract`, positive numeric `entryPrice`, `targetPrice`, `stopPrice`, and integer `holdMinutes` (1–10080). Server validation enforces directional ordering. Levels are underlying USD prices, not option premiums. Wait reports need no plan. Existing reports without a complete plan display Wait; expired directional reports display Do not enter. Demo content is explicitly labeled and remains illustrative.
+
+### Freshness, status and guided publishing
+
+- Evidence becomes stale at 30 minutes from its original observation time. Stale waiting plans show Wait—refresh needed; new directional publications and new entry confirmations are blocked. An entered plan keeps its management levels with a stale warning, rather than implying the position was closed.
+- Admin-only status updates follow waiting → entered → target/stopped/cancelled, or waiting → cancelled. Closed plans cannot reopen. Each append-only status event includes observed time, recorded time and evidence. Version checks reject conflicting updates. These are administrator observations, not brokerage fills or live-feed confirmations.
+- Status changes never reset evidence age. Member research refreshes every 30 seconds; failures clear the displayed feed and show an error.
+- The administrator checklist tracks the latest uploaded batch, time-aligned GEX snapshot, matching agent report and linked publication. Prepare draft preserves source symbol/time and copies report text/citations for explicit review. Contract and level fields are deliberately left blank. Linked directional publication requires a fresh source snapshot and accepted policy decision. Manual reviewed publications remain available.
+- The workflow is a guide, not automatic OCR verification. Users must still check the extracted rows and customer-facing research. API configuration is still required for real image analysis and news requests.

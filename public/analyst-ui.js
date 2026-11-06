@@ -32,7 +32,7 @@ form.addEventListener('submit',async event=>{
   if(selected.some(x=>x.file.size>5*1024*1024))throw new Error('Each photo must be 5 MB or smaller.');
   const images=await Promise.all(selected.map(async({file,role})=>({name:file.name,role,dataUrl:await readFile(file)})));
   const result=await api('/api/analyst/uploads',{symbol:form.elements.symbol.value.trim().toUpperCase(),asOf:new Date(form.elements.asOf.value).toISOString(),notes:form.elements.notes.value,images});
-  clearDraft();await refresh(result.id);message.textContent='Photos saved locally. Read GEX photo, review the rows, then save them in the GEX form before analysis.';
+  clearDraft();await refresh(result.id);document.dispatchEvent(new Event('photos-saved'));message.textContent='Photos saved locally. Read GEX photo, review the rows, then save them in the GEX form before analysis.';
  }catch(e){message.textContent=e.message;}finally{submit.disabled=false;}
 });
 batch.addEventListener('change',()=>{clearDraft();document.querySelector('#analyst-report').hidden=true;});

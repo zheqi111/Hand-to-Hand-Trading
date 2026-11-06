@@ -1,3 +1,4 @@
+import {freshness,STATUS_LABELS} from './lifecycle.js';
 // Shared by publication validation and the customer presentation.
 export function validateTradePlan(position,value){
  if(position==='Wait / no trade')return null;
@@ -15,7 +16,10 @@ export function validateTradePlan(position,value){
  return plan;
 }
 export function planState(report,now=Date.now()){
+ const latest=report.statusHistory?.at(-1);if(latest&&['target','stopped','cancelled'].includes(latest.status))return {status:latest.status,action:STATUS_LABELS[latest.status]+'. No new entry.'};
  if(report.position==='Wait / no trade')return {status:'wait',action:'Wait. No trade.'};
+ if(latest?.status==='entered'){let plan;try{plan=validateTradePlan(report.position,report.tradePlan);}catch{}return {status:'entered',action:freshness(report,now).stale?'Entry confirmed · refresh needed':'Entry confirmed · manage the plan',plan};}
  if(!report.demo&&(!Number.isFinite(Date.parse(report.expiresAt))||Date.parse(report.expiresAt)<=now))return {status:'expired',action:'Expired. Do not enter.'};
+ if(freshness(report,now).stale)return {status:'stale',action:'Wait — refresh needed.'};
  try{const plan=validateTradePlan(report.position,report.tradePlan);return {status:'conditional',action:report.position==='Call scenario'?'Call · wait for entry':'Put · wait for entry',plan};}catch{return {status:'incomplete',action:'Wait. Plan incomplete.'};}
 }
