@@ -9,7 +9,7 @@ import {readReports} from './learning.mjs';
 import {reviseStrategies} from './strategy.mjs';
 try { process.loadEnvFile(fileURLToPath(new URL('./.env',import.meta.url))); } catch(error) { if(error.code!=='ENOENT')throw error; }
 const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/model.js':'model.js','/gex-ui.js':'gex-ui.js','/gex-input.js':'gex-input.js'};
-files['/lifecycle.js']='lifecycle.js';files['/workflow-ui.js']='workflow-ui.js';files['/trade-plan.js']='trade-plan.js';files['/trade-card.js']='trade-card.js';files['/admin']='index.html';files['/']='customer.html';files['/customer.js']='customer.js';files['/account.js']='account.js';files['/workspace.css']='workspace.css';files['/admin-ui.js']='admin-ui.js';
+files['/research-data.js']='research-data.js';files['/chart-layers.js']='chart-layers.js';files['/journal-ui.js']='journal-ui.js';files['/strategy-review-ui.js']='strategy-review-ui.js';files['/lifecycle.js']='lifecycle.js';files['/workflow-ui.js']='workflow-ui.js';files['/trade-plan.js']='trade-plan.js';files['/trade-card.js']='trade-card.js';files['/admin']='index.html';files['/']='customer.html';files['/customer.js']='customer.js';files['/account.js']='account.js';files['/workspace.css']='workspace.css';files['/admin-ui.js']='admin-ui.js';
 const types={html:'text/html',js:'text/javascript',css:'text/css'};
 files['/analyst-ui.js']='analyst-ui.js';
 files['/learning-ui.js']='learning-ui.js';

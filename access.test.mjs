@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,readFile,rm} from 'node:fs/promises';
+import {mkdtemp,readFile,rm,mkdir,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL} from 'node:url';
@@ -23,8 +23,8 @@ test('roles protect raw data, publication and subscriber feed; sessions revoke o
  assert.equal((await call('/api/admin/publications',{...publication,position:'Call scenario'},admin)).status,400);
  assert.equal((await call('/api/admin/publications',{...publication,position:'Call scenario',tradePlan:{contract:'SPY 600 call 2026-11-12',entryPrice:600,targetPrice:590,stopPrice:598,holdMinutes:60}},admin)).status,400);
  const saved=await call('/api/admin/publications',publication,admin);assert.equal(saved.status,201);const {report}=await saved.json();const feed=await call('/api/customer/reports',null,admin).then(r=>r.json());assert.equal(feed.reports[0].reason,publication.reason);
- assert.equal((await call('/api/admin/publications',{id:report.id},admin,'DELETE')).status,200);assert.equal((await call('/api/customer/reports',null,admin).then(r=>r.json())).reports.length,0);
- const directional={...publication,position:'Call scenario',tradePlan:{contract:'SPY 600 call 2026-11-12',entryPrice:600,targetPrice:605,stopPrice:598,holdMinutes:60}};
+ assert.equal((await call('/api/admin/publications',{id:report.id},admin,'DELETE')).status,200);assert.equal((await call('/api/customer/reports',null,admin).then(r=>r.json())).reports.length,0);const journal=await call('/api/customer/journal',null,admin).then(r=>r.json());assert.equal(journal.entries.length,1);assert.ok(journal.entries[0].withdrawal);assert.equal(journal.entries[0].reason,publication.reason);assert.equal((await call('/api/customer/journal',null,customer)).status,403);assert.equal((await call('/api/admin/strategy-reviews',null,customer)).status,403);
+ const directional={...publication,optionDetails:{type:'call',strike:600,expiration:new Date(Date.now()+86400000).toISOString().slice(0,10),bid:4,ask:4.2,asOf:new Date().toISOString(),source:'Test source'},position:'Call scenario',tradePlan:{contract:'SPY 600 call 2026-11-12',entryPrice:600,targetPrice:605,stopPrice:598,holdMinutes:60}};
  assert.equal((await call('/api/admin/publications',{...directional,asOf:new Date(Date.now()-1800001).toISOString()},admin)).status,400);
  const active=await call('/api/admin/publications',directional,admin).then(r=>r.json());
  const change={id:active.report.id,status:'entered',observedAt:new Date().toISOString(),note:'Manual price and volume confirmation.',expectedVersion:0};
@@ -32,6 +32,10 @@ test('roles protect raw data, publication and subscriber feed; sessions revoke o
  assert.equal((await call('/api/admin/trade-status',change,admin)).status,200);
  assert.equal((await call('/api/admin/trade-status',change,admin)).status,400);
  assert.equal((await call('/api/customer/reports',null,admin).then(r=>r.json())).reports[0].statusHistory[0].source,'administrator');
+ await mkdir(join(dir,'strategies'),{recursive:true});const proposal={id:'test-proposal',group:{symbol:'SPY',source:'Test',scope:'0DTE',unit:'Provider units',regime:1,horizonMinutes:30},revision:1,createdAt:new Date().toISOString(),minSupportingCategories:2,requiredCategories:['price_action'],requireCounterEvidence:true,requireInvalidation:true};await writeFile(join(dir,'strategies','test-proposal.json'),JSON.stringify(proposal));
+ assert.equal((await call('/api/admin/strategy-reviews',{id:proposal.id,decision:'approve',note:'Reviewed by administrator.'},admin)).status,400);
+ assert.equal((await call('/api/admin/strategy-reviews',{id:proposal.id,decision:'reject',note:'Insufficient forward evidence.'},admin)).status,200);
+ assert.equal((await call('/api/admin/strategy-reviews',{id:proposal.id,decision:'approve',note:'Try to override a rejection.'},admin)).status,400);
  await call('/api/account/logout',{},admin);assert.equal((await call('/api/gex',null,admin)).status,401);
  }finally{await new Promise(r=>server.close(r));await rm(dir,{recursive:true,force:true});}
 });

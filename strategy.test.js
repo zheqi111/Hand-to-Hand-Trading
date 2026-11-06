@@ -17,9 +17,9 @@ test('miss revisions persist, are idempotent, bounded and isolate market/horizon
   const group=strategyGroup(snapshot,30);
   assert.equal((await reviseStrategies(root,[r1],snapshots,t+29*60000)).length,0);
   const first=await reviseStrategies(root,[r1],snapshots,t+35*60000);
-  assert.equal(selectStrategy(first,group,t+35*60000).minSupportingCategories,2);
+  assert.equal(selectStrategy(first,group,t+35*60000).minSupportingCategories,1);assert.equal(first[0].minSupportingCategories,2);assert.equal(selectStrategy([{...first[0],review:{decision:'approve',createdAt:iso(t+36*60000)}}],group,t+37*60000).minSupportingCategories,2);
   const second=await reviseStrategies(root,[r1,r2],snapshots,t+80*60000);
-  assert.equal(second.length,2);assert.equal(selectStrategy(second,group,t+80*60000).minSupportingCategories,3);
+  assert.equal(second.length,2);assert.equal(selectStrategy(second,group,t+80*60000).minSupportingCategories,1);assert.equal(second[1].minSupportingCategories,3);
   assert.equal(selectStrategy(second,strategyGroup(snapshot,60),t+80*60000).revision,0);
   assert.equal(selectStrategy(second,strategyGroup({...snapshot,symbol:'QQQ'},30),t+80*60000).revision,0);
   await Promise.all([reviseStrategies(root,[r1,r2],snapshots,t+90*60000),reviseStrategies(root,[r1,r2],snapshots,t+90*60000)]);

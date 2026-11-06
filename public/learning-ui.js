@@ -19,17 +19,17 @@ async function refresh(){
 }
 document.querySelector('#learning-refresh').addEventListener('click',refresh);
 document.addEventListener('gex-saved',refresh);
-document.addEventListener('analyst-saved',refresh);
+document.addEventListener('analyst-saved',refresh);document.addEventListener('strategy-reviewed',refresh);
 setInterval(refresh,60000);
 refresh();
 function renderStrategies(strategies){
  const target=document.querySelector('#strategy-revisions');target.replaceChildren();
- if(!strategies.length){target.textContent='Baseline confirmation policy. No resolved non-overlapping misses have triggered a revision yet.';return;}
+ if(!strategies.length){target.textContent='Baseline confirmation policy. No resolved non-overlapping misses have triggered a proposal yet.';return;}
  for(const {active,versions,history}of strategies){
   const article=document.createElement('article');article.className='panel strategy-card';
   const heading=document.createElement('h4');heading.textContent=active.group.symbol+' · '+active.group.horizonMinutes+'m · '+active.name+' · revision '+active.revision;article.append(heading);
   const metadata=document.createElement('small');metadata.textContent=active.group.source+' / '+active.group.scope+' / '+active.group.unit+' / GEX sign '+active.group.regime;article.append(metadata);
-  const change=document.createElement('p');change.textContent=active.change;article.append(change);
+  const change=document.createElement('p');change.textContent=active.change||'Baseline active. Proposed revisions require forward evaluation and administrator approval.';article.append(change);
   const reason=document.createElement('p');reason.textContent=active.reason;article.append(reason);
   const limit=document.createElement('small');limit.textContent='Evidence categories are model-declared, not independently verified. These changes are unproven hypotheses; higher confirmation counts do not guarantee better predictions.';article.append(limit);
   const stats=document.createElement('p');stats.textContent=versions.map(v=>'Revision '+v.revision+': '+v.matched+'/'+v.resolved+' matched, '+v.withheld+' wait, '+v.missing+' missing outcomes, '+v.reports+' total reports').join(' | ');article.append(stats);

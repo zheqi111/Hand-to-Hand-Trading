@@ -12,6 +12,7 @@ export function validateStatusUpdate(report,input,now=Date.now()){
  const allowed={waiting:['entered','cancelled'],entered:['target','stopped','cancelled']};
  if(!allowed[from]?.includes(input.status))throw new Error('Invalid status transition. Closed trades cannot be reopened.');
  if(input.status==='entered'&&(freshness(report,now).stale||Date.parse(report.expiresAt)<=now))throw new Error('Stale or expired plans cannot confirm a new entry. Publish a freshly reviewed plan.');
+ if(input.status==='entered'&&report.optionDetails&&(!Number.isFinite(Date.parse(report.optionDetails.asOf))||now-Date.parse(report.optionDetails.asOf)>=300000||Date.parse(report.optionDetails.expiration+'T23:59:59Z')<now))throw new Error('Option quote is stale or contract expired. Publish a fresh reviewed plan before entry.');
  const observed=Date.parse(input.observedAt);if(!Number.isFinite(observed)||observed>now+60000||observed<Date.parse(last?.observedAt||report.publishedAt))throw new Error('Use an observation time after the previous status and not in the future.');
  if(typeof input.note!=='string'||input.note.trim().length<10||input.note.length>2000)throw new Error('Describe the observed evidence in at least 10 characters.');
  return {status:input.status,observedAt:new Date(observed).toISOString(),recordedAt:new Date(now).toISOString(),note:input.note.trim(),source:'administrator'};

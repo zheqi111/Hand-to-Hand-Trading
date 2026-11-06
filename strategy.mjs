@@ -15,10 +15,10 @@ export function baseline(group){
 }
 export async function readRevisions(root){
  const dir=resolve(root,'strategies');await mkdir(dir,{recursive:true});
- return Promise.all((await readdir(dir)).filter(name=>name.endsWith('.json')).map(name=>readFile(resolve(dir,name),'utf8').then(JSON.parse)));
+ return Promise.all((await readdir(dir)).filter(name=>name.endsWith('.json')).map(async name=>{const r=JSON.parse(await readFile(resolve(dir,name),'utf8'));try{r.review=JSON.parse(await readFile(resolve(dir,'reviews',r.id+'.json'),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}return r;}));
 }
 export function selectStrategy(revisions,group,cutoff=Date.now()){
- return revisions.filter(r=>groupKey(r.group)===groupKey(group)&&Date.parse(r.createdAt)<=cutoff).sort((a,b)=>b.revision-a.revision)[0]||baseline(group);
+ return revisions.filter(r=>r.review?.decision==='approve'&&Date.parse(r.review.createdAt)<=cutoff&&groupKey(r.group)===groupKey(group)&&Date.parse(r.createdAt)<=cutoff).sort((a,b)=>b.revision-a.revision)[0]||baseline(group);
 }
 function overlaps(a,b){return Date.parse(a.start)<Date.parse(b.end)&&Date.parse(b.start)<Date.parse(a.end);}
 export async function reviseStrategies(root,reports,snapshots,cutoff=Date.now()){
@@ -28,12 +28,12 @@ export async function reviseStrategies(root,reports,snapshots,cutoff=Date.now())
   const revisions=await readRevisions(root);
   const misses=reports.filter(r=>r.forecast&&Date.parse(r.createdAt)<=cutoff).map(report=>({report,outcome:evaluateForecast(report,snapshots,cutoff)})).filter(x=>x.outcome.status==='resolved'&&!x.outcome.correct).sort((a,b)=>Date.parse(a.report.createdAt)-Date.parse(b.report.createdAt)||a.report.id.localeCompare(b.report.id));
   for(const {report,outcome}of misses){
-   const group=strategyGroup(report.forecast),prior=selectStrategy(revisions,group,cutoff);
+   const group=strategyGroup(report.forecast),prior=revisions.filter(r=>groupKey(r.group)===groupKey(group)&&Date.parse(r.createdAt)<=cutoff).sort((a,b)=>b.revision-a.revision)[0]||baseline(group);
    const window={start:report.createdAt,end:report.forecast.dueAt,reportId:report.id};
    if(prior.reviewedWindows.some(w=>w.reportId===report.id||overlaps(w,window)))continue;
    const level=Math.min(2,prior.level+1);
    const failure=outcome.actual==='range'?'Expected movement did not exceed the fixed neutral band.':report.forecast.direction==='range'?'The endpoint moved outside the forecast range.':'The endpoint moved opposite to the forecast.';
-   const revision={...prior,id:digest([STRATEGY_VERSION,group,report.id]),createdAt:new Date(cutoff).toISOString(),revision:prior.revision+1,parentId:prior.id,level,name:level===1?'Guarded confirmation':'Defensive confirmation',minSupportingCategories:level+1,requireCounterEvidence:true,requireInvalidation:true,triggerReportId:report.id,outcomeSnapshotId:outcome.outcomeSnapshotId,reason:failure+' Cause is unknown; this revision increases confirmation requirements rather than guessing why.',change:level===prior.level?'Confirmation requirements are already at the configured maximum. Added this miss to the review history.':'Require '+(level+1)+' distinct supporting evidence categories, including price action, plus counterevidence review and an invalidation condition.',reviewedWindows:[...prior.reviewedWindows,window],status:'Forward testing; effectiveness unproven'};
+   const revision={...prior,id:digest([STRATEGY_VERSION,group,report.id]),createdAt:new Date(cutoff).toISOString(),revision:prior.revision+1,parentId:prior.id,level,name:level===1?'Guarded confirmation':'Defensive confirmation',minSupportingCategories:level+1,requireCounterEvidence:true,requireInvalidation:true,triggerReportId:report.id,outcomeSnapshotId:outcome.outcomeSnapshotId,reason:failure+' Cause is unknown; this revision increases confirmation requirements rather than guessing why.',change:level===prior.level?'Confirmation requirements are already at the configured maximum. Added this miss to the review history.':'Require '+(level+1)+' distinct supporting evidence categories, including price action, plus counterevidence review and an invalidation condition.',reviewedWindows:[...prior.reviewedWindows,window],review:undefined,status:'Proposed — awaiting forward evaluation and administrator approval'};
    try{await writeFile(resolve(root,'strategies',revision.id+'.json'),JSON.stringify(revision,null,2),{flag:'wx'});revisions.push(revision);}catch(error){if(error.code!=='EEXIST')throw error;}
   }
   return revisions;
@@ -69,7 +69,7 @@ export function strategySummary(revisions,reports,snapshots,cutoff=Date.now()){
  const keys=[...new Set(revisions.map(r=>groupKey(r.group)))];
  return keys.map(key=>{
   const history=revisions.filter(r=>groupKey(r.group)===key).sort((a,b)=>b.revision-a.revision);
-  const active=history[0];
+  const active=selectStrategy(history,history[0].group,cutoff);
   const versions=[baseline(active.group),...history.slice().reverse()].map(policy=>{
    const evaluated=reports.filter(r=>r.strategy?.id===policy.id||(policy.revision===0&&!r.strategy&&r.forecast&&groupKey(strategyGroup(r.forecast))===key)).map(r=>evaluateForecast(r,snapshots,cutoff));
    const resolved=evaluated.filter(e=>e.status==='resolved');
