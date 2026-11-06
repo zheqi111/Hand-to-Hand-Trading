@@ -105,3 +105,9 @@ All previous outcome-scoring rules, timestamp cutoffs and neutral bands stay fix
 - Before public launch, integrate hosted authentication/recovery, HTTPS, persistent session storage and payment-provider verified webhook entitlement handling. Do not expose this local server as a production subscription service.
 
 Run `npm test` for access-control, publication, session revocation and existing research tests.
+
+### Trade-first presentation
+
+Customer research now leads with action, underlying entry price, take-profit and stop-loss levels, and estimated holding time. Clickable level diagrams explain each threshold; the reasoning stays collapsed until requested. These diagrams are not live price charts or predicted paths, and they do not place orders.
+
+Call/put publications require `tradePlan` with `contract`, positive numeric `entryPrice`, `targetPrice`, `stopPrice`, and integer `holdMinutes` (1–10080). Server validation enforces directional ordering. Levels are underlying USD prices, not option premiums. Wait reports need no plan. Existing reports without a complete plan display Wait; expired directional reports display Do not enter. Demo content is explicitly labeled and remains illustrative.

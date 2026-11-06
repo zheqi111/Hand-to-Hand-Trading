@@ -1,3 +1,4 @@
+import {validateTradePlan} from './public/trade-plan.js';
 import {randomBytes,scryptSync,timingSafeEqual,createHash,randomUUID} from 'node:crypto';
 import {mkdir,readFile,writeFile,readdir,unlink} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -34,6 +35,7 @@ export function workspaceAccess(root){
     if(req.method!=='POST'){json(405,{error:'Method not allowed.'});return true;}
     const fields=['title','symbol','risk','position','entry','reason','analysis','invalidation','sources','asOf','expiresAt'];const record={};for(const f of fields){if(typeof b[f]!=='string'||!b[f].trim()||b[f].length>12000)throw new Error('Complete every publication field.');record[f]=b[f].trim();}
     if(!['Conservative','Balanced','Aggressive'].includes(record.risk))throw new Error('Select a risk mode.');if(!['Call scenario','Put scenario','Wait / no trade'].includes(record.position))throw new Error('Select a position.');if(!Number.isFinite(Date.parse(record.asOf))||!Number.isFinite(Date.parse(record.expiresAt))||Date.parse(record.asOf)>Date.now()+60000||Date.parse(record.expiresAt)<=Date.now()||Date.parse(record.expiresAt)<=Date.parse(record.asOf))throw new Error('Use a valid observation time and future expiry.');if(b.reviewed!==true)throw new Error('Review and approve the customer-facing content first.');
+    record.tradePlan=validateTradePlan(record.position,b.tradePlan);
     record.id=randomUUID();record.publishedAt=new Date().toISOString();record.author=u.email;await writeFile(join(pub,record.id+'.json'),JSON.stringify(record),{flag:'wx'});json(201,{report:record});
    }catch(e){json(400,{error:e.code==='ENOENT'?'Publication not found.':e.message});}return true;
   }

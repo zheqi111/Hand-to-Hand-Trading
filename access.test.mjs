@@ -20,6 +20,8 @@ test('roles protect raw data, publication and subscriber feed; sessions revoke o
  const publication={title:'Reviewed scenario',symbol:'SPY',risk:'Balanced',position:'Wait / no trade',entry:'Wait',reason:'Conflicting evidence',analysis:'Reviewed evidence',invalidation:'Reassess after release',sources:'Manual source',asOf:new Date(Date.now()-60000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString(),reviewed:true};
  assert.equal((await call('/api/admin/publications',publication,customer)).status,403);
  assert.equal((await call('/api/admin/publications',{...publication,reviewed:false},admin)).status,400);
+ assert.equal((await call('/api/admin/publications',{...publication,position:'Call scenario'},admin)).status,400);
+ assert.equal((await call('/api/admin/publications',{...publication,position:'Call scenario',tradePlan:{contract:'SPY 600 call 2026-11-12',entryPrice:600,targetPrice:590,stopPrice:598,holdMinutes:60}},admin)).status,400);
  const saved=await call('/api/admin/publications',publication,admin);assert.equal(saved.status,201);const {report}=await saved.json();const feed=await call('/api/customer/reports',null,admin).then(r=>r.json());assert.equal(feed.reports[0].reason,publication.reason);
  assert.equal((await call('/api/admin/publications',{id:report.id},admin,'DELETE')).status,200);assert.equal((await call('/api/customer/reports',null,admin).then(r=>r.json())).reports.length,0);
  await call('/api/account/logout',{},admin);assert.equal((await call('/api/gex',null,admin)).status,401);
