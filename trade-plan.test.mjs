@@ -18,3 +18,11 @@ test('expired and incomplete reports never show actionable levels; demo is expli
  assert.equal(planState({...report,position:'Wait / no trade'}).status,'wait');
  assert.equal(planState({...report,demo:true}).status,'conditional');
 });
+
+test('support and resistance require evidence and valid ordering without being confused with exits',()=>{
+ const value=validateTradePlan('Call scenario',{...plan,supportPrice:596,resistancePrice:606,levelEvidence:'Five-minute chart, repeated tests at stated observation time.'});assert.equal(value.supportPrice,596);assert.equal(value.stopPrice,598);
+ assert.throws(()=>validateTradePlan('Call scenario',{...plan,supportPrice:596}));
+ assert.throws(()=>validateTradePlan('Call scenario',{...plan,supportPrice:606,resistancePrice:596,levelEvidence:'Repeated chart tests.'}));
+ assert.throws(()=>validateTradePlan('Call scenario',{...plan,supportPrice:NaN}));
+ assert.equal(validateTradePlan('Call scenario',plan).supportPrice,undefined);
+});

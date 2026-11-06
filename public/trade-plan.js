@@ -9,6 +9,9 @@ export function validateTradePlan(position,value){
  const {entryPrice:e,targetPrice:t,stopPrice:s}=plan;
  if(position==='Call scenario'&&!(s<e&&e<t))throw new Error('For a call, stop must be below entry and take-profit above entry.');
  if(position==='Put scenario'&&!(t<e&&e<s))throw new Error('For a put, take-profit must be below entry and stop above entry.');
+ for(const key of ['supportPrice','resistancePrice']){const v=value[key];if(v!==undefined&&v!==null&&v!==''){if(typeof v!=='number'||!Number.isFinite(v)||v<=0)throw new Error('Support and resistance must be positive underlying prices.');plan[key]=v;}}
+ if(plan.supportPrice&&plan.resistancePrice&&plan.supportPrice>=plan.resistancePrice)throw new Error('Major support must be below major resistance.');
+ if(plan.supportPrice||plan.resistancePrice){plan.levelEvidence=String(value.levelEvidence||'').trim();if(plan.levelEvidence.length<10||plan.levelEvidence.length>2000)throw new Error('Explain the chart evidence, timeframe and observation time for support/resistance.');}
  return plan;
 }
 export function planState(report,now=Date.now()){
