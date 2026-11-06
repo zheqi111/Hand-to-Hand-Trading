@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -32,19 +32,21 @@ test('comparison refuses changed scope or units',()=>{
 });
 test('API persists snapshots across restart, sorts by data time, and rejects cross-origin writes',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'hth-gex-'));
- let server;
+ let server,cookie;
  async function start(){server=createServer(pathToFileURL(dir+'/'));server.listen(0,'127.0.0.1');await once(server,'listening');return 'http://127.0.0.1:'+server.address().port;}
  async function stop(){await new Promise(resolve=>server.close(resolve));}
  try{
   let base=await start();
-  const post=(data,headers={})=>fetch(base+'/api/gex',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(data)});
+  const login=async(setup=false)=>{await fetch(base+'/api/account');const setupCode=await readFile(join(dir,'accounts/setup-code.txt'),'utf8');const r=await fetch(base+'/api/account/'+(setup?'setup':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'admin@example.com',password:'test-password-12345',setupCode})});cookie=r.headers.get('set-cookie').split(';')[0];};
+  await login(true);
+  const post=(data,headers={})=>fetch(base+'/api/gex',{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie,...headers},body:JSON.stringify(data)});
   assert.equal((await post(fixture(),{Origin:'https://example.com'})).status,403);
   assert.equal((await post({...fixture(),spot:''})).status,400);
   assert.equal((await post(fixture())).status,201);
   assert.equal((await post({...fixture(),asOf:'2026-11-04T14:00:00Z'})).status,201);
-  await stop();base=await start();
-  const history=await fetch(base+'/api/gex').then(r=>r.json());assert.equal(history.snapshots.length,2);
-  const context=await fetch(base+'/api/gex/context?symbol=SPY').then(r=>r.json());assert.equal(context.snapshot.asOf,'2026-11-04T15:00:00.000Z');assert.equal(context.analysis.total,10);
+  await stop();base=await start();await login();
+  const history=await fetch(base+'/api/gex',{headers:{Cookie:cookie}}).then(r=>r.json());assert.equal(history.snapshots.length,2);
+  const context=await fetch(base+'/api/gex/context?symbol=SPY',{headers:{Cookie:cookie}}).then(r=>r.json());assert.equal(context.snapshot.asOf,'2026-11-04T15:00:00.000Z');assert.equal(context.analysis.total,10);
   assert.equal((await fetch(base+'/data/gex/anything.json')).status,404);
  }finally{if(server?.listening)await stop();await rm(dir,{recursive:true,force:true});}
 });

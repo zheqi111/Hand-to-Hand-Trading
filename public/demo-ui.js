@@ -1,6 +1,6 @@
 const $=s=>document.querySelector(s);
-const titles={overview:'Overview',setups:'Scenario explorer','photo-analyst':'Photo analyst','gex-upload':'My GEX data','learning-center':'Learning journal',journal:'Saved scenarios'};
-function navigate(){const id=location.hash.slice(1) in titles?location.hash.slice(1):'overview';Object.keys(titles).forEach(key=>$('#'+key).hidden=key!==id);$('nav').querySelectorAll('a').forEach(a=>{if(a.hash==='#'+id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});$('#page-title').textContent=titles[id];$('.demo-label').textContent=['overview','setups','journal'].includes(id)?'● DEMO DATA':'● YOUR LOCAL DATA';window.scrollTo(0,0);}
+const titles={publishing:'Review & publish',overview:'Overview',setups:'Scenario explorer','photo-analyst':'Photo analyst','gex-upload':'My GEX data','learning-center':'Learning journal',journal:'Saved scenarios'};
+function navigate(){const id=Object.hasOwn(titles,location.hash.slice(1))?location.hash.slice(1):'overview';Object.keys(titles).forEach(key=>$('#'+key).hidden=key!==id);$('nav').querySelectorAll('a').forEach(a=>{if(a.hash==='#'+id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});$('#page-title').textContent=titles[id];$('.demo-label').textContent=['overview','setups','journal'].includes(id)?'● DEMO DATA':'● YOUR LOCAL DATA';window.scrollTo(0,0);}
 window.addEventListener('hashchange',navigate);navigate();
 let symbol='SPY',range='1D',selected=0,values=[];
 const price=()=>symbol==='SPY'?598.4:512.8;

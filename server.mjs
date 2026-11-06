@@ -1,3 +1,4 @@
+import {workspaceAccess} from './access.mjs';
 import http from 'node:http';
 import {readFile,mkdir,writeFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
@@ -8,6 +9,7 @@ import {readReports} from './learning.mjs';
 import {reviseStrategies} from './strategy.mjs';
 try { process.loadEnvFile(fileURLToPath(new URL('./.env',import.meta.url))); } catch(error) { if(error.code!=='ENOENT')throw error; }
 const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/model.js':'model.js','/gex-ui.js':'gex-ui.js','/gex-input.js':'gex-input.js'};
+files['/admin']='index.html';files['/']='customer.html';files['/customer.js']='customer.js';files['/account.js']='account.js';files['/workspace.css']='workspace.css';files['/admin-ui.js']='admin-ui.js';
 const types={html:'text/html',js:'text/javascript',css:'text/css'};
 files['/analyst-ui.js']='analyst-ui.js';
 files['/learning-ui.js']='learning-ui.js';
@@ -19,6 +21,7 @@ export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
   const records=await Promise.all(names.map(n=>readFile(resolve(fileURLToPath(dataDir),n),'utf8').then(JSON.parse)));
   return records.sort((a,b)=>Date.parse(b.asOf)-Date.parse(a.asOf)||Date.parse(b.savedAt)-Date.parse(a.savedAt));
  }
+ const access=workspaceAccess(fileURLToPath(dataDir));
  const analyst=photoRoutes(fileURLToPath(dataDir),history);
  return http.createServer(async(req,res)=>{
   const json=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
@@ -26,6 +29,9 @@ export function createServer(dataDir=new URL('./data/gex/',import.meta.url)){
   if(req.headers.origin&&req.headers.origin!=='http://'+req.headers.host)return json(403,{error:'Cross-origin requests are not allowed.'});
   const url=new URL(req.url,'http://localhost');
   try{
+   if(await access.route(req,res,url,json))return;
+   if(url.pathname.startsWith('/api/gex')||url.pathname.startsWith('/api/analyst')){const user=await access.current(req);if(user?.role!=='admin')return json(user?403:401,{error:'Administrator sign-in required.'});}
+   if(url.pathname==='/api/admin/reports'){const user=await access.current(req);if(user?.role!=='admin')return json(user?403:401,{error:'Administrator sign-in required.'});if(req.method!=='GET')return json(405,{error:'GET required.'});return json(200,{reports:await readReports(fileURLToPath(dataDir))});}
    if(await analyst(req,url,json))return;
    if(url.pathname==='/api/status')return json(200,{mode:'manual',gex:'user_snapshots',news:'not_connected',execution:'disabled'});
    if(url.pathname==='/api/gex'&&req.method==='POST'){

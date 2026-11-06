@@ -1,0 +1,12 @@
+import {api,accountUI,reportCard,el} from './account.js';
+const state=await accountUI(true);
+if(state.user?.role==='admin'){
+ document.querySelector('#signed-in-account').append(document.querySelector('#account'));document.querySelector('#admin-login').hidden=true;document.querySelector('#admin-shell').hidden=false;
+ if(!location.hash)location.hash='publishing';
+ await Promise.all([import('./app.js'),import('./demo-ui.js'),import('./gex-ui.js'),import('./analyst-ui.js'),import('./learning-ui.js')]);
+ const select=document.querySelector('#review-report'),output=document.querySelector('#review-output'),message=document.querySelector('#publish-message');let reports=[];
+ function show(){const r=reports.find(r=>r.id===select.value);output.textContent=r?`Created: ${r.createdAt}\nPolicy decision: ${JSON.stringify(r.policyDecision)}\n\n${r.parts.map(p=>p.text).join('\n')}`:'No saved agent reports yet. Upload photos and run an analysis in Photo analyst.';}
+ async function refresh(){try{reports=(await api('/api/admin/reports')).reports;select.replaceChildren(...reports.map(r=>{const o=el('option',`${r.createdAt} · ${r.forecast?.symbol||'Report'}`);o.value=r.id;return o;}));show();const publications=(await api('/api/admin/publications')).reports;const host=document.querySelector('#publications');host.replaceChildren(...publications.map(r=>{const c=reportCard(r),b=el('button','Unpublish');b.onclick=async()=>{try{await api('/api/admin/publications',{id:r.id},'DELETE');await refresh();}catch(e){message.textContent=e.message;}};c.append(b);return c;}));if(!publications.length)host.append(el('p','Nothing published yet. Internal reports are never published automatically.'));}catch(e){message.textContent=e.message;}}
+ select.onchange=show;document.querySelector('#reload-reports').onclick=refresh;document.addEventListener('analyst-saved',refresh);
+ document.querySelector('#publish-form').onsubmit=async e=>{e.preventDefault();const button=e.target.querySelector('button[type=submit]');button.disabled=true;try{const b=Object.fromEntries(new FormData(e.target));b.reviewed=b.reviewed==='on';b.asOf=new Date(b.asOf).toISOString();b.expiresAt=new Date(b.expiresAt).toISOString();await api('/api/admin/publications',b);message.textContent='Published. View the customer website to preview the member experience.';e.target.reset();await refresh();}catch(err){message.textContent=err.message;}finally{button.disabled=false;}};await refresh();
+}

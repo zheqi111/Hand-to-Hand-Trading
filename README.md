@@ -93,3 +93,15 @@ The server checks the forecast's structured evidence declarations. Repeated indi
 Learning journal now shows each active policy, trigger, revision history and per-version results. Revised-version results only include reports produced under that version. An increase in observed hit rate is not automatically promoted as an improvement; sample selection, regime changes and correlated forecasts remain limitations. There is no automatic relaxation, rollback, position-size increase, execution, model fine-tuning, or source-code rewrite. More general strategy optimization remains future work and should be forward-tested.
 
 All previous outcome-scoring rules, timestamp cutoffs and neutral bands stay fixed. Historical reports and forecasts remain unchanged. API-backed analysis still requires your key; the automated strategy tests use synthetic inputs and do not demonstrate better trading performance.
+
+## Administrator and customer workspaces
+
+- `/` is the customer website: sample research, risk filters, membership overview, customer registration/sign-in.
+- `/admin` is the administrator workspace. First create the administrator using the private code in `data/gex/accounts/setup-code.txt`. Choose your own email and password (12+ characters). The code is never served over HTTP and is ignored by Git with the rest of `data/`.
+- Administrator-only APIs enforce role checks for GEX, photos, agent runs, learning history and the report inbox. Navigation alone is not the access boundary.
+- Review & publish accepts explicitly reviewed customer-facing text with sources, entry conditions, invalidation and a validity window. Internal agent reports and photos are never published automatically. Unpublish removes a publication from the member feed.
+- Customer registration never grants administrator status or a paid subscription. Billing is not connected; subscriptions remain inactive and checkout is unavailable. Admins can preview the actual published feed on the customer page.
+- Local prototype only: the server remains bound to loopback. Passwords use salted scrypt hashes; sessions use HttpOnly, SameSite cookies, expire after eight hours, and are cleared on server restart. Login attempts are rate-limited. No email verification or password recovery yet.
+- Before public launch, integrate hosted authentication/recovery, HTTPS, persistent session storage and payment-provider verified webhook entitlement handling. Do not expose this local server as a production subscription service.
+
+Run `npm test` for access-control, publication, session revocation and existing research tests.
